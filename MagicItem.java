@@ -1,0 +1,109 @@
+/**
+ * MagicItems are items that can cause magic effects on other objects. So they are a source
+ * of magic. As items they can be traded and they also can be the target of magic effects  
+ */
+public abstract class MagicItem implements Tradeable, MagicEffectRealization, MagicSource {
+	private String name; // Must not be null or empty
+	private int usages; // Number of usages remaining; must not be negative
+	private int price; // Must not be negative
+	private int weight; // must not be negative
+
+	/**
+	 * @param name name
+	 * @param usages number of usages still left
+	 * @param price price
+	 * @param weight weight
+	 */
+	public MagicItem(String name, int usages, int price, int weight) {
+		if(name == null || name.isEmpty() || usages < 0 || price < 0 || weight < 0) {
+			throw new IllegalArgumentException("MagicItem constructor error");
+		}
+		this.name = name;
+		this.usages = usages;
+		this.price = price;
+		this.weight = weight;
+	}
+
+	// Returns value of usages (for access from deriving classes)
+	public int getUsages() {
+		return this.usages;
+	}
+	
+	// If usages > 0 reduce usage by 1 and return true, otherwise return false; @return returns true if usage is still possible
+	public boolean tryUsage() {
+		if(this.usages <= 0) {
+			return false;
+		}
+		--this.usages;
+		return true;
+	}
+
+	// Returns "use" if usages is equal to 1, "uses" otherwise
+	public String usageString() {
+		if(this.usages == 1) {
+			return "use";
+		}
+		return "uses";
+	}
+
+    // returns empty string. Is overridden in deriving classes as needed
+	public String additionalOutputString() {
+		return "";
+	}
+
+    /**
+     * Formats this object according to
+     * "['name'; 'weight' g; 'price' 'currencyString'; 'usages' 'usageString''additionalOutputString']"
+     * 'currencyString' is "Knut" if price is 1, "Knuts" otherwise
+     * e.g. (when additionalOutput() returns an empty string)
+     * "[Accio Scroll; 1 g; 1 Knut; 5 uses]" or "[Alohomora Scroll; 1 g; 10 Knuts; 1 use]"
+     * @return "['name'; 'weight' g; 'price' 'currencyString'; 'usages' 'usageString''additionalOutputString']"
+     */
+	@Override 
+	public String toString() {
+		String curStr;
+		if(this.price == 1) {
+			curStr = "Knut";
+		} else {
+			curStr = "Knuts";
+		}
+		String output = ("[" + this.name + "; " +  String.valueOf(this.weight) + " g; " + String.valueOf(this.price) + " " + curStr + "; " + String.valueOf(this.usages) + " " + this.usageString() + this.additionalOutputString() + "]");
+		return output;
+	}
+
+	//Tradeable Interface:
+
+	// Returns price of the object
+	@Override
+	public int getPrice() {
+		return this.price;
+	}
+	
+	// Returns weight of the object
+	@Override    
+	public int getWeight() {
+		return this.weight;
+	}
+	  
+	//MagicSource Interface:
+
+	// Always returns true; no Exceptions needed
+	@Override
+	public boolean provideMana(MagicLevel levelNeeded, int amount) {
+		if(levelNeeded == null || amount < 0) {
+			throw new IllegalArgumentException("MagicItem provideMana error");
+		}
+		return true;
+	}
+
+	//MagicEffectRealization Interface:
+	
+	// Reduce usages to usages*(1-percentage/100.)
+	@Override
+	public void takeDamagePercent(int percentage) {
+		if(percentage < 0 || percentage > 100) {
+			throw new IllegalArgumentException("MagicItem takeDamagePercent error");
+		}
+		this.usages = (int) (this.usages * (1.0 - (percentage / 100.0)));
+	}
+}
